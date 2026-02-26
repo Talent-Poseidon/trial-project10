@@ -7,7 +7,9 @@ test.describe('Admin can manage projects', () => {
     await page.fill('input[name="email"]', 'admin@example.com');
     await page.fill('input[name="password"]', 'password');
     await page.click('button[type="submit"]');
-    await page.waitForNavigation();
+    // Wait for navigation to the admin dashboard
+    await page.waitForURL('/admin');
+    await expect(page.getByTestId('project-page-nav')).toBeVisible();
   });
 
   test('Admin views the project list', async ({ page }) => {
