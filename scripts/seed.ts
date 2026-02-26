@@ -58,7 +58,19 @@ async function main() {
     },
   });
 
-  console.log({ originalAdmin, testAdmin, testUser });
+  // Seed project for E2E tests (needed by "Admin views the project list" test)
+  const testProject = await prisma.project.upsert({
+    where: { id: 'seed-project-1' },
+    update: {},
+    create: {
+      id: 'seed-project-1',
+      name: 'Sample Project',
+      startDate: new Date('2024-01-01'),
+      endDate: new Date('2024-12-31'),
+    },
+  });
+
+  console.log({ originalAdmin, testAdmin, testUser, testProject });
 }
 
 main()

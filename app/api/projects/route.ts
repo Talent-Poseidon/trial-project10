@@ -1,40 +1,36 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '@/lib/prisma';
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === 'GET') {
-    try {
-      const projects = await prisma.project.findMany();
-      res.status(200).json(projects);
-    } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch projects' });
-    }
-  } else if (req.method === 'POST') {
-    const { name, startDate, endDate } = req.body;
+export async function GET() {
+  try {
+    const projects = await prisma.project.findMany();
+    return NextResponse.json(projects);
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to fetch projects' }, { status: 500 });
+  }
+}
 
-    // Validate input
+export async function POST(request: Request) {
+  try {
+    const { name, startDate, endDate } = await request.json();
+
     if (!name || !startDate || !endDate) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     if (new Date(startDate) >= new Date(endDate)) {
-      return res.status(400).json({ error: 'End date must be after start date' });
+      return NextResponse.json({ error: 'End date must be after start date' }, { status: 400 });
     }
 
-    try {
-      const newProject = await prisma.project.create({
-        data: {
-          name,
-          startDate: new Date(startDate),
-          endDate: new Date(endDate),
-        },
-      });
-      res.status(201).json(newProject);
-    } catch (error) {
-      res.status(500).json({ error: 'Failed to create project' });
-    }
-  } else {
-    res.setHeader('Allow', ['GET', 'POST']);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+    const newProject = await prisma.project.create({
+      data: {
+        name,
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+      },
+    });
+    return NextResponse.json(newProject, { status: 201 });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to create project' }, { status: 500 });
   }
 }
