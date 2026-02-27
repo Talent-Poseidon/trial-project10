@@ -12,7 +12,7 @@ function b64urlDecode(str: string): Uint8Array {
 
 async function hkdfDerive(
   secret: string,
-  salt: string,
+  cookieName: string,
   length: number
 ): Promise<Uint8Array> {
   const enc = new TextEncoder();
@@ -27,9 +27,9 @@ async function hkdfDerive(
     {
       name: "HKDF",
       hash: "SHA-256",
-      salt: enc.encode(salt),
+      salt: enc.encode(""),
       info: enc.encode(
-        `Auth.js Generated Encryption Key${salt ? ` (${salt})` : ""}`
+        `Auth.js Generated Encryption Key (${cookieName})`
       ),
     },
     base,
