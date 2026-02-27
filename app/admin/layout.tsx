@@ -19,7 +19,14 @@ export default async function AdminLayout({
       where: { email: session.user.email! },
   });
 
+  console.log("[AdminLayout] Check:", { 
+    email: session.user.email, 
+    dbRole: user?.role, 
+    isApproved: user?.is_approved 
+  });
+
   if (!user || user.role !== "admin") {
+    console.log("[AdminLayout] Access denied. Redirecting to dashboard.");
     redirect("/dashboard");
   }
 

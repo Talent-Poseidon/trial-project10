@@ -10,6 +10,7 @@ test.describe('Admin can manage projects', () => {
     // Login redirects to /dashboard, then navigate to admin projects
     await page.waitForURL('/dashboard');
     await page.goto('/admin/projects');
+    await expect(page).toHaveURL(/\/admin\/projects/);
     await expect(page.getByTestId('project-page-nav')).toBeVisible();
   });
 
