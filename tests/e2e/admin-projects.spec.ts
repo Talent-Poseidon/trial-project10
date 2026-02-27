@@ -2,14 +2,23 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Admin can manage projects', () => {
   test.beforeEach(async ({ page }) => {
-    // Authenticate as admin
-    await page.goto('/auth/login');
-    await page.fill('input[name="email"]', 'admin@example.com');
-    await page.fill('input[name="password"]', 'password123');
-    await page.click('button[type="submit"]');
-    // Login redirects to /dashboard, then navigate to admin projects
-    await page.waitForURL('/dashboard');
+    // Note: Authentication is now handled globally via auth.setup.ts
+    // The browser context already has the admin session cookies
+    
+    console.log(`[Test: ${test.info().title}] Navigating to /admin/projects...`);
+    
+    // Navigate directly to admin projects
     await page.goto('/admin/projects');
+    
+    // Debug: Check current URL to detect redirect issues
+    const currentURL = page.url();
+    console.log(`[Test: ${test.info().title}] Current URL: ${currentURL}`);
+    
+    if (currentURL.includes('/auth/login')) {
+      console.error('CRITICAL: Redirected to login page! Session might be invalid or missing.');
+    }
+
+    // Verify we are on the correct page
     await expect(page).toHaveURL(/\/admin\/projects/);
     await expect(page.getByTestId('project-page-nav')).toBeVisible();
   });
