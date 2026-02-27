@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint .",
     "test:e2e": "playwright test",
-    "test:e2e:ci": "prisma db push --accept-data-loss && prisma db seed && playwright test",
+    "test:e2e:ci": "prisma db push --accept-data-loss && prisma db seed && AUTH_SECRET='dummy_secret_for_e2e_test' playwright test",
     "setup:admin": "ts-node scripts/setup-admin.ts"
   },
   "prisma": {

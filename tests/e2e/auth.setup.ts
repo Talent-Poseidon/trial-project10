@@ -37,7 +37,18 @@ setup('authenticate as admin', async ({ page }) => {
   await expect(page).toHaveURL(/\/dashboard/);
   
   // Add a small delay to ensure cookies are set
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(2000);
+  
+  // DEBUG: Check cookies
+  const cookies = await page.context().cookies();
+  const sessionCookie = cookies.find(c => c.name.includes('session-token'));
+  
+  if (sessionCookie) {
+    console.log(`COOKIE FOUND: ${sessionCookie.name} | Domain: ${sessionCookie.domain} | Path: ${sessionCookie.path}`);
+  } else {
+    console.error('CRITICAL ERROR: No session token found in cookies after login!');
+    console.log('All cookies:', cookies.map(c => c.name).join(', '));
+  }
   
   // 6. Save storage state
   console.log(`Saving storage state to ${authFile}...`);

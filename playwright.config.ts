@@ -27,6 +27,9 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+    
+    /* Set a consistent user agent to avoid session invalidation */
+    userAgent: 'Playwright-E2E-Test-Agent',
   },
 
   /* Configure projects for major browsers */
