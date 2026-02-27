@@ -1,11 +1,20 @@
 import { test as setup, expect } from '@playwright/test';
 import path from 'path';
+import fs from 'fs';
 
-const authFile = path.join(__dirname, '../playwright/.auth/admin.json');
+// Define the path relative to project root
+const authDir = path.join(__dirname, '../../playwright/.auth');
+const authFile = path.join(authDir, 'admin.json');
 
 setup('authenticate as admin', async ({ page }) => {
-  console.log('Starting global authentication setup...');
+  console.log('--- GLOBAL AUTH SETUP STARTED ---');
   
+  // Ensure the auth directory exists
+  if (!fs.existsSync(authDir)){
+      console.log(`Directory ${authDir} does not exist. Creating it...`);
+      fs.mkdirSync(authDir, { recursive: true });
+  }
+
   // 1. Navigate to login page
   console.log('Navigating to /auth/login...');
   await page.goto('/auth/login');
@@ -24,8 +33,6 @@ setup('authenticate as admin', async ({ page }) => {
   await page.waitForURL('/dashboard');
   
   // 5. Verify successful login by checking a key element on dashboard
-  // Using a robust selector that should exist on dashboard
-  // If this fails, it means login was not successful even if URL changed
   console.log('Verifying dashboard access...');
   await expect(page).toHaveURL(/\/dashboard/);
   
@@ -36,5 +43,13 @@ setup('authenticate as admin', async ({ page }) => {
   console.log(`Saving storage state to ${authFile}...`);
   await page.context().storageState({ path: authFile });
   
-  console.log('Global authentication setup completed successfully.');
+  // Verify file was created
+  if (fs.existsSync(authFile)) {
+    console.log('SUCCESS: Auth file created successfully.');
+  } else {
+    console.error('ERROR: Auth file was NOT created even after storageState call.');
+    throw new Error('Failed to create auth file');
+  }
+
+  console.log('--- GLOBAL AUTH SETUP COMPLETED ---');
 });
