@@ -45,17 +45,27 @@ export default defineConfig({
         storageState: 'playwright/.auth/admin.json',
       },
       dependencies: ['setup'],
-      // Exclude login/register tests from using the admin session
-      testIgnore: ['**/auth/login.spec.ts', '**/auth/register.spec.ts'],
+      // Exclude tests that need unauthenticated (guest) context
+      testIgnore: [
+        '**/auth/login.spec.ts',
+        '**/auth/register.spec.ts',
+        '**/smoke.spec.ts',
+        '**/dashboard/access.spec.ts',
+      ],
     },
     {
       name: 'chromium-no-auth',
       use: {
         ...devices['Desktop Chrome'],
-        // No storageState means fresh session
+        // No storageState means fresh (guest) session
       },
-      // Only run login/register tests here
-      testMatch: ['**/auth/login.spec.ts', '**/auth/register.spec.ts'],
+      // Tests that must run without pre-existing authentication
+      testMatch: [
+        '**/auth/login.spec.ts',
+        '**/auth/register.spec.ts',
+        '**/smoke.spec.ts',
+        '**/dashboard/access.spec.ts',
+      ],
     }
   ],
 

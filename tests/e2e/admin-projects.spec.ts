@@ -50,9 +50,15 @@ test.describe('Admin can manage projects', () => {
   test('Admin views the project list', async ({ page }) => {
     await page.goto('/admin/projects');
     await expect(page.getByTestId('project-list-container')).toBeVisible();
-    // Check if the project list is populated
-    const projectList = await page.$$('ul > li');
-    expect(projectList.length).toBeGreaterThan(0);
+
+    // Wait for the project list to be populated (API fetch may take time)
+    // Use Playwright's auto-waiting locator instead of page.$$ which is a snapshot
+    const firstProject = page.locator('ul > li').first();
+    await expect(firstProject).toBeVisible({ timeout: 10000 });
+
+    const projectCount = await page.locator('ul > li').count();
+    console.log(`[Project List] Found ${projectCount} projects`);
+    expect(projectCount).toBeGreaterThan(0);
   });
 
   test('Admin sets up a new project', async ({ page }) => {
