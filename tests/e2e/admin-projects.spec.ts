@@ -5,6 +5,16 @@ test.describe('Admin can manage projects', () => {
     // Note: Authentication is now handled globally via auth.setup.ts
     // The browser context already has the admin session cookies
     
+    console.log(`[Test: ${test.info().title}] Checking session cookies before navigation...`);
+    const cookies = await page.context().cookies();
+    const sessionToken = cookies.find(c => c.name.includes('session-token'));
+    if (sessionToken) {
+        console.log(`[Test: ${test.info().title}] Session Cookie Found: ${sessionToken.name}`);
+    } else {
+        console.error(`[Test: ${test.info().title}] CRITICAL: No session cookie found in context!`);
+        console.log(`[Test: ${test.info().title}] All cookies:`, JSON.stringify(cookies, null, 2));
+    }
+
     console.log(`[Test: ${test.info().title}] Navigating to /admin/projects...`);
     
     // Navigate directly to admin projects
