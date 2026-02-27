@@ -2,33 +2,47 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Admin can manage projects', () => {
   test.beforeEach(async ({ page }) => {
-    // Note: Authentication is now handled globally via auth.setup.ts
-    // The browser context already has the admin session cookies
-    
-    console.log(`[Test: ${test.info().title}] Checking session cookies before navigation...`);
+    const title = test.info().title;
+
+    // 1. Check cookies in browser context
+    console.log(`[Test: ${title}] Checking session cookies before navigation...`);
     const cookies = await page.context().cookies();
     const sessionToken = cookies.find(c => c.name.includes('session-token'));
     if (sessionToken) {
-        console.log(`[Test: ${test.info().title}] Session Cookie Found: ${sessionToken.name}`);
+      console.log(`[Test: ${title}] Session Cookie Found: ${sessionToken.name} | Domain: ${sessionToken.domain} | Secure: ${sessionToken.secure} | SameSite: ${sessionToken.sameSite}`);
+      console.log(`[Test: ${title}] Token value (first 50 chars): ${sessionToken.value.substring(0, 50)}...`);
     } else {
-        console.error(`[Test: ${test.info().title}] CRITICAL: No session cookie found in context!`);
-        console.log(`[Test: ${test.info().title}] All cookies:`, JSON.stringify(cookies, null, 2));
+      console.error(`[Test: ${title}] CRITICAL: No session cookie found in context!`);
+      console.log(`[Test: ${title}] All cookies:`, JSON.stringify(cookies.map(c => ({ name: c.name, domain: c.domain, secure: c.secure })), null, 2));
     }
 
-    console.log(`[Test: ${test.info().title}] Navigating to /admin/projects...`);
-    
-    // Navigate directly to admin projects
-    await page.goto('/admin/projects');
-    
-    // Debug: Check current URL to detect redirect issues
-    const currentURL = page.url();
-    console.log(`[Test: ${test.info().title}] Current URL: ${currentURL}`);
-    
-    if (currentURL.includes('/auth/login')) {
-      console.error('CRITICAL: Redirected to login page! Session might be invalid or missing.');
+    // 2. Navigate to admin projects
+    console.log(`[Test: ${title}] Navigating to /admin/projects...`);
+    const response = await page.goto('/admin/projects');
+    console.log(`[Test: ${title}] Response status: ${response?.status()} | URL after navigation: ${page.url()}`);
+
+    // 3. Check for redirect chain
+    if (page.url().includes('/auth/login')) {
+      console.error(`[Test: ${title}] CRITICAL: Redirected to login page!`);
+
+      // Check if cookies are still present after redirect
+      const postRedirectCookies = await page.context().cookies();
+      const postRedirectSession = postRedirectCookies.find(c => c.name.includes('session-token'));
+      console.error(`[Test: ${title}] Cookie after redirect: ${postRedirectSession ? 'PRESENT' : 'MISSING'}`);
+
+      // Check server logs by making a direct API call
+      try {
+        const sessionCheck = await page.evaluate(async () => {
+          const res = await fetch('/api/auth/session');
+          return { status: res.status, body: await res.text() };
+        });
+        console.error(`[Test: ${title}] /api/auth/session response: status=${sessionCheck.status} body=${sessionCheck.body.substring(0, 200)}`);
+      } catch (e) {
+        console.error(`[Test: ${title}] Failed to check session API: ${e}`);
+      }
     }
 
-    // Verify we are on the correct page
+    // 4. Verify we are on the correct page
     await expect(page).toHaveURL(/\/admin\/projects/);
     await expect(page.getByTestId('project-page-nav')).toBeVisible();
   });

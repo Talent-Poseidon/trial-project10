@@ -11,7 +11,10 @@ export default async function AdminLayout({
 }) {
   const session = await auth();
 
+  console.log("[AdminLayout] Session result:", session ? `user=${session.user?.email}, role=${session.user?.role}, is_approved=${session.user?.is_approved}` : "NULL - no session");
+
   if (!session?.user) {
+    console.log("[AdminLayout] No session user found, redirecting to /auth/login");
     redirect("/auth/login");
   }
 

@@ -44,19 +44,28 @@ setup('authenticate as admin', async ({ page }) => {
   const sessionCookie = cookies.find(c => c.name.includes('session-token'));
   
   if (sessionCookie) {
-    console.log(`COOKIE FOUND: ${sessionCookie.name} | Domain: ${sessionCookie.domain} | Path: ${sessionCookie.path}`);
+    console.log(`COOKIE FOUND: ${sessionCookie.name} | Domain: ${sessionCookie.domain} | Path: ${sessionCookie.path} | Secure: ${sessionCookie.secure} | HttpOnly: ${sessionCookie.httpOnly} | SameSite: ${sessionCookie.sameSite}`);
   } else {
     console.error('CRITICAL ERROR: No session token found in cookies after login!');
-    console.log('All cookies:', cookies.map(c => c.name).join(', '));
+    console.log('All cookies:', JSON.stringify(cookies.map(c => ({ name: c.name, domain: c.domain, path: c.path, secure: c.secure })), null, 2));
   }
-  
+
   // 6. Save storage state
   console.log(`Saving storage state to ${authFile}...`);
   await page.context().storageState({ path: authFile });
-  
-  // Verify file was created
+
+  // Verify file was created and inspect its contents
   if (fs.existsSync(authFile)) {
-    console.log('SUCCESS: Auth file created successfully.');
+    const savedState = JSON.parse(fs.readFileSync(authFile, 'utf-8'));
+    const savedCookies = savedState.cookies || [];
+    const savedSession = savedCookies.find((c: any) => c.name.includes('session-token'));
+    console.log(`SUCCESS: Auth file created. Total cookies saved: ${savedCookies.length}`);
+    if (savedSession) {
+      console.log(`SAVED SESSION COOKIE: name=${savedSession.name} | domain=${savedSession.domain} | secure=${savedSession.secure} | httpOnly=${savedSession.httpOnly} | sameSite=${savedSession.sameSite} | expires=${savedSession.expires}`);
+      console.log(`SAVED SESSION TOKEN (first 50 chars): ${savedSession.value.substring(0, 50)}...`);
+    } else {
+      console.error('ERROR: Session cookie NOT found in saved auth file!');
+    }
   } else {
     console.error('ERROR: Auth file was NOT created even after storageState call.');
     throw new Error('Failed to create auth file');
